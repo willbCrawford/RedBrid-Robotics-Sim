@@ -11,8 +11,8 @@ class Ground_Robot_Interface(Thread, object):
         self.ID = ID
         self.color = color
         self.deltaX = randint(-33, 33) / 100
-        self.deltay = sqrt(((pow(0.33, 2)) - (pow(deltaX, 2))))
-        self.angle = tan((deltay / deltaX))
+        self.deltay = sqrt(((pow(0.33, 2)) - (pow(self.deltaX, 2))))
+        self.angle = tan((self.deltay / self.deltaX))
         self.thread_cancelled = False
         self.collision = False
 

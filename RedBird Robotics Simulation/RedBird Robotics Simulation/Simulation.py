@@ -1,18 +1,19 @@
 from Sim_Timer import Sim_Timer
 from Target_Robot import Target_Robot
-from math import pow, sqrt
 
 class Simulation(object):
     """description of class"""
+    global TIMER
     def __init__(self):
-        timer = Timing()
-
-        robot = Target_Robot(timer)
+        TIMER = Sim_Timer()
+        robot = Target_Robot(0.5, 0.7, 1, 2, TIMER)
 
         self.target_robot = []
 
         self.target_robot.append(robot)
 
+        for robots in self.target_robot:
+            robots.run()
 
-
-
+    def run(self):
+        Timer.run()
