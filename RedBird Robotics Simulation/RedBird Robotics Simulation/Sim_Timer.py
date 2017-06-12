@@ -1,5 +1,5 @@
 from threading import Thread
-from time import sleep
+import time
 
 class Sim_Timer(object):
     """description of class"""
@@ -10,11 +10,13 @@ class Sim_Timer(object):
         
     def run(self):
         while not PAUSED:
-            sleep(1)
+            time.sleep(1.0)
             self.update_time()
 
     def update_time(self):
-        self.counter = self.counter + 1
+        self.counter += 1
+        print(self.counter)
+        return self.counter
 
     def get_current_timer(self):
         return self.counter

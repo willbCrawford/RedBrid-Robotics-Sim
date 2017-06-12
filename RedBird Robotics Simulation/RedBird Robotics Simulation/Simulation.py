@@ -16,4 +16,4 @@ class Simulation(object):
             robots.run()
 
     def run(self):
-        Timer.run()
+        TIMER .run()

@@ -5,17 +5,25 @@ from math import tan, pow, sqrt
 
 class Ground_Robot_Interface(Thread, object):
     """description of class"""
+    global iterations
+    global XYID
+    iterations = 60
+
     def __init__(self, x, y, ID, color):
         self.x = x
         self.y = y
         self.ID = ID
         self.color = color
+
         self.deltaX = randint(-33, 33) / 100
         self.deltay = sqrt(((pow(0.33, 2)) - (pow(self.deltaX, 2))))
         self.angle = tan((self.deltay / self.deltaX))
+
         self.thread_cancelled = False
         self.collision = False
 
+        self.pError = 0.0 
+        
     def get_coordinates(self):
         pass
 

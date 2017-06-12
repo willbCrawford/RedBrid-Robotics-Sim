@@ -24,6 +24,9 @@
     <Compile Include="Ground_RobotInterface.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Obstacle_Robot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RedBird_Robotics_Simulation.py" />
     <Compile Include="Simulation.py">
       <SubType>Code</SubType>
