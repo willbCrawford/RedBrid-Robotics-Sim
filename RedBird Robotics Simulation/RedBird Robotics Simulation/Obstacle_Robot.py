@@ -24,4 +24,4 @@ class Obstacle_Robots(Ground_Robot_Interface, object):
         self.x = self.x + self.deltaOX
         self.y = self.y + self.deltaOY
 
-        self.current_pos = (orID, self.x, self.y)
+        self.current_pos = (orID, self.x, self.y) 

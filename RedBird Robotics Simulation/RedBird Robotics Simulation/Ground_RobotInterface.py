@@ -6,7 +6,6 @@ from math import tan, pow, sqrt
 class Ground_Robot_Interface(Thread, object):
     """description of class"""
     global iterations
-    global XYID
     iterations = 60
 
     def __init__(self, x, y, ID, color):
@@ -25,7 +24,14 @@ class Ground_Robot_Interface(Thread, object):
         self.pError = 0.0 
         
     def get_coordinates(self):
-        pass
+        return (self.x, self.y)
+
+    def get_id(self):
+        return self.ID
+
+    def set_coordinates(self, x, y):
+        self.x = x
+        self.y = y
 
     def get_angle(self):
         pass

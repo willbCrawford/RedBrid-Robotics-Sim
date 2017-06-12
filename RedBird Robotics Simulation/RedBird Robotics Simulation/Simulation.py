@@ -12,8 +12,8 @@ class Simulation(object):
 
         self.target_robot.append(robot)
 
-        for robots in self.target_robot:
-            robots.run()
+        for robot in self.target_robot:
+            robot.run()
 
     def run(self):
         TIMER .run()

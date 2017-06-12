@@ -38,21 +38,23 @@ class Target_Robot(Ground_Robot_Interface, object):
             self.current_pos = (self.x, self.y , self.ID)
             print(self.current_pos)
 
-            XYID = [self.current_pos]
+            super().set_coordinates(self.x, self.y) 
 
-    def check_collisions(self):
+    def check_collisions(self, target_robot):
         min_num = 0
-        max_num = 10
-        for min_num in range(len(XYID)):
-            if not (self.ID == min_num[2]):
-                dXX = self.x - min_num[0]
-                dYY = self.y - min_num[1]
+        max_num = len(target_robot)
+
+        target_robot = [Target_Robot]
+
+        while min_num < len(target_robot):
+            for robot in range(1, len(target_robot)):
+                dXX = target_robot[min_num].x - target_robot[robot].x
+                dYY = target_robot[min_num].y - target_robot[robot].y
 
                 dCC = sqrt((pow(dXX, 2) + pow(dYY, 2)))
 
                 if dCC <= 2*radius :
-                    self.button_pushed(XYID[min_num])
-                    
+                    target_robot[min_num].button_pushed(target_robot[robot])
                     self.collision = True
 
             min_num = min_num + 1
