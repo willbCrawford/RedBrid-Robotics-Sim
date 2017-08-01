@@ -1,116 +1,190 @@
 from Ground_RobotInterface import Ground_Robot_Interface, iterations
 from Sim_Timer import Sim_Timer
-from time import sleep
+from Obstacle_Robot import Obstacle_Robot
+from threading import Thread
+from math import fabs, sqrt, tan
+import rospy
 
-class Target_Robot(Ground_Robot_Interface, object):
+class Target_Robot(Ground_Robot_Interface):
     """description of class"""
-    def __init__(self, x, y, id, color, timer):
-        self.timer = timer = Sim_Timer() 
 
-        return super().__init__(x, y, id, color)
+    def __init__(self, x, y, deltax, deltay, id, color, timer): 
+        self._timer = timer
 
+        return super(Target_Robot, self).__init__(x, y, deltax, deltay, id, color)
+        
     def update_posX(self):
-        changeX = self.deltaX * iterations
-        self.x = changeX + self.x
-        return self.x
+        changeX = self._deltaX * iterations
+        self._x = changeX + self._x
+        return self._x
 
     def update_posY(self):
-        changeY = self.deltaY * iterations
-        self.y = changeY + self.y
-        return self.y
+        changeY = self._deltaY * iterations
+        self._y = changeY + self._y
+        return self._y
      
     def update_movement(self):
-        while not self.timer.PAUSED:
 
-            if(self.collision == True):
+        while not rospy.is_shutdown():
+            #adds the ability to pause and resume timer
+            while not (self._timer._quit.is_set()):
 
-               self.deltaX = self.deltaX * -1
+                #while the paused flag is not raised
+                while not (self._timer._PAUSED.is_set()):
+                    self.start_timer = self._timer.get_current_timer()
 
-               self.deltay = self.deltay * -1
+                    #as long as the time elapsed is less than 20
+                    while self.deltaTime < 20:
 
-               sleep(1)
+                        if(self.collision == True):
+                            
+                            self._deltaX = self._deltaX * -1
 
-               break
+                            self._deltaY = self._deltaY * -1 
 
-            self.update_posX()
-            self.update_posY()
+                            self.collision = False
 
-            self.current_pos = (self.x, self.y , self.ID)
-            print(self.current_pos)
+                        else:
+                            self.update_posX() 
 
-            super().set_coordinates(self.x, self.y) 
+                            self.update_posY()
 
-    def check_collisions(self, target_robot):
-        min_num = 0
-        max_num = len(target_robot)
+                        self.deltaTime = self._timer.get_current_timer() - self.start_timer
 
-        target_robot = [Target_Robot]
+                        rospy.sleep(iterations)
 
-        while min_num < len(target_robot):
-            for robot in range(1, len(target_robot)):
-                dXX = target_robot[min_num].x - target_robot[robot].x
-                dYY = target_robot[min_num].y - target_robot[robot].y
+                    if(self.deltaTime == 20):
 
-                dCC = sqrt((pow(dXX, 2) + pow(dYY, 2)))
+                        self.deltaTIme = 0
 
-                if dCC <= 2*radius :
-                    target_robot[min_num].button_pushed(target_robot[robot])
-                    self.collision = True
+                        self._timerUp = True
 
-            min_num = min_num + 1
+    def oR_check_collisions(self, obstacle_robots = [Obstacle_Robot]):
+        #making the obstacle robots an array of Obstacle Robots (arbitrary definition)
 
-    def button_pushed(self, robot):
-         robot = Target_Robot
-         
-         vector_i = self.x - robot.x
-         vector_j = self.y - robot.y
+        #as long as the timer flag is not set
+        while not self._timer._PAUSED.is_set():
 
-         theta = tan(vector_j / vector_i)
+            #looping through the list of Obstacle Robots
+            for oRobot in obstacle_robots:
+                
+                #finding the distance from center to center
+                dXX = fabs((oRobot.get_x()) - self._x)
+                dYY = fabs((oRobot.get_y()) - self._y)
+                dCC = sqrt((pow(dXX, 2)) + pow(dYY, 2))
 
-         min_theta = self.theta - 70
-         max_theta = self.theta + 70
+                #creating the max distance the robots can be
+                max_distance = (self._radius + oRobot._radius)
 
-         if(theta >= min_theta and theta <= max_theta):
-             self.button_pushed = True
+                if dCC <= max_distance:
+
+                    #creating two vectors between the x and y positions
+                    vector_i = oRobot.get_x() - self._x
+                    vector_j = oRobot.get_y() - self._y
+                    
+                    #determining the vector between the two robots and bounds checking the angle
+                    if(vector_i == 0):
+
+                        if(vector_j < 0):
+
+                            theta = 270
+
+                        theta = 90
+
+                    else:
+
+                        theta = tan(vector_j / vector_i)
+
+                    #finding the relative angle needed for the robot's button to be pushed
+                    min_theta = self.get_theta() - 70
+                    max_theta = self.get_theta() + 70
+
+                    if(theta >= min_theta and theta <= max_theta):
+                        self.collision = True
+
+                rospy.sleep(iterations)
 
     def run(self):
-        current_time = self.timer.get_current_timer()
+        self._distanceThread = Thread(target = self.update_movement)
 
-        while not self.timer.PAUSED and current_time < 20:
-            self.update_movement()
+        #self._or_collision_thread = Thread(target = self.oR_check_collisions, args = (obstacle_robots,))
 
-            self.check_collision()
+        start_time = self._timer.get_current_timer()
+        current_time = 0
 
-            current_time = self.timer.get_current_timer() - current_time
+        try:
+            self._distanceThread.start()
 
-            sleep(1)
+        except:
 
-    def error(self, current_position, velocity_vector, angle):
-        errorVX = self.deltaX - velocity_vector[0]
-        errorVY = self.detlaY - velocity_vector[1]
+            rospy.loginfo("Thread failed!")
 
-        if(errorVX >= 0.01):
-            self.deltaX = velocity_vector[0]
-            if(errorVY >= 0.01):
-                self.deltaY = velocity_vector[1]
-                
+        #try:
+        #    self._or_collision_thread.start()
 
-    def confidenceInterval(self, XY):
-        counter = 0
-        sum = 0
+        #    print("Obstacle Robot collision detection started")
 
-        for robot in self.XYID:
-            sumX = sumX + robot[0]
-            sumY = sumY + robot[1]
-            counter += 1
+        #except:
+        #    print("Thread failed!")
+    
+    def change_X_data(self, x):
+        self._x = x
 
-        meanX = sumX/counter
-        meanY = sumY/counter
+    def change_Y_data(self, y):
+        self._y = y
 
-    def check_error(self, x, y, vecocity):
-        pErrorX = ((self.x - x) /  x) * 100
-        pErrorX = ((self.x - y) /  y) * 100 
+    def change_VX_data(self, velocityX):
+        self._deltaX = velocityX
 
-        self.pError = 1 - ((pErrorX + pErrorY) / 2)
+    def change_VY_data(self, velocityY):
+        self._deltaY = velocityY
 
-        return self.pError
+    def check_error(self, x, y, velocityX, velocityY):
+        pErrorX = ((self._x - x) /  x)
+        
+        if not (pErrorX <= 0.001):
+            self.change_X_data(x)
+
+        pErrorY = ((self._y - y) /  y) 
+
+        if not (pErrorY <= 0.001):
+            self.change_Y_data(y)
+
+        pErrorVX = ((self._deltaX - velocityX) / velocityX)
+
+        if not (pErrorVX <= 0.001):
+            self.change_VX_data(velocityX)
+
+        pErrorVY = ((self._deltaY - velocityY) / velocityY)
+
+        if not (pErrorVY<= 0.001):
+            self.change_VY_data(velocityY)
+
+    def update_data(self, x, y, velocityX, velocityY):
+        self.change_X_data(x)
+
+        self.change_Y_data(y)
+        
+        self.change_VX_data(velocityX)
+
+        self.change_VY_data(velocityY)
+
+    def get_id(self):
+        return self._id
+
+    def get_x(self):
+        return self._x
+
+    def get_y(self):
+        return self._y
+
+    def get_radius(self):
+        return self._radius
+
+    def get_future_coord(self, time):
+        deltaX = self._deltaX * time
+        deltaY = self._deltaY * time
+
+        current_pos = ((self._x + deltaX), (self._y + deltaY))
+
+        return current_pos
